@@ -1,0 +1,16 @@
+def get_unique_ack_no(db: Session, ack_no: str) -> str:
+    existing = db.query(Complaint).filter(
+        Complaint.acknowledgement_no.like(f"{ack_no}%")
+    ).count()
+    if existing == 0:
+        return ack_no
+    return f"{ack_no}-{existing}"
+
+
+def get_unique_account_no(db: Session, account_no: str) -> str:
+    existing = db.query(Instrument).filter(
+        Instrument.payer_account_number.like(f"{account_no}%")
+    ).count()
+    if existing == 0:
+        return account_no
+    return f"{account_no}-{existing}"
