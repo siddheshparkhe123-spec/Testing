@@ -1,16 +1,28 @@
-def get_unique_ack_no(db: Session, ack_no: str) -> str:
-    existing = db.query(Complaint).filter(
-        Complaint.acknowledgement_no.like(f"{ack_no}%")
-    ).count()
-    if existing == 0:
-        return ack_no
-    return f"{ack_no}-{existing}"
+@Override
+public NonIndividualCustomerDetails apply(Map<String, String> params) {
+    Map<String, Object> userResponse = requestFactory
+        .getRequester(ApiCategory.NON_INDIVIDUAL_CUSTOMER_DETAILS)
+        .apply(params);
 
+    NonIndividualCustomerDetails details =
+        jsonPathMapper.convert(userResponse, NonIndividualCustomerDetails.class);
 
-def get_unique_account_no(db: Session, account_no: str) -> str:
-    existing = db.query(Instrument).filter(
-        Instrument.payer_account_number.like(f"{account_no}%")
-    ).count()
-    if existing == 0:
-        return account_no
-    return f"{account_no}-{existing}"
+    // 70-character name matching logic
+    String requestName = params.get("customerName");
+    String responseName = details.getCustomerName();
+
+    if (requestName != null && responseName != null) {
+        String requestPrefix = requestName.length() >= 70
+            ? requestName.substring(0, 70)
+            : requestName;
+        String responsePrefix = responseName.length() >= 70
+            ? responseName.substring(0, 70)
+            : responseName;
+
+        if (requestPrefix.equalsIgnoreCase(responsePrefix)) {
+            details.setCustomerName(requestName);
+        }
+    }
+
+    return details;
+}
